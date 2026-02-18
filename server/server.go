@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/manish/codegraph/db"
-	"github.com/manish/codegraph/indexer"
-	"github.com/manish/codegraph/query"
+	"github.com/iamanishx/codegraph/db"
+	"github.com/iamanishx/codegraph/indexer"
+	"github.com/iamanishx/codegraph/query"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 

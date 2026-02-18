@@ -3,7 +3,7 @@ package query
 import (
 	"encoding/json"
 
-	"github.com/manish/codegraph/db"
+	"github.com/iamanishx/codegraph/db"
 )
 
 type Engine struct {

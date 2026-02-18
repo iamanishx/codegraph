@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/manish/codegraph/parser"
+	"github.com/iamanishx/codegraph/parser"
 )
 
 type FileEntry struct {

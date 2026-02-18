@@ -1,4 +1,4 @@
-module github.com/manish/codegraph
+module github.com/iamanishx/codegraph
 
 go 1.25.7
 

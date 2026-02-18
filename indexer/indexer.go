@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/manish/codegraph/db"
-	"github.com/manish/codegraph/parser"
-	"github.com/manish/codegraph/walker"
+	"github.com/iamanishx/codegraph/db"
+	"github.com/iamanishx/codegraph/parser"
+	"github.com/iamanishx/codegraph/walker"
 )
 
 type Indexer struct {

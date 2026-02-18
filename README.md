@@ -28,7 +28,7 @@ your project files
 ## Install
 
 ```sh
-go install github.com/iamanishx/codegraph/cmd
+go install github.com/iamanishx/codegraph/cmd/codegraph@latest
 ```
 
 Or build from source:
