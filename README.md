@@ -28,13 +28,13 @@ your project files
 ## Install
 
 ```sh
-go install github.com/manish/codegraph/cmd@latest
+go install github.com/iamanishx/codegraph/cmd@latest
 ```
 
 Or build from source:
 
 ```sh
-git clone https://github.com/manish/codegraph.git
+git clone https://github.com/iamanishx/codegraph.git
 cd codegraph
 go build -o codegraph ./cmd/
 ```
