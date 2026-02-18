@@ -47,23 +47,58 @@ func printUsage() {
 	fmt.Fprintf(os.Stderr, `codegraph - dependency graph for LLMs
 
 usage:
-  codegraph init                    initialize graph db in current project
-  codegraph index                   full reindex of the codebase
-  codegraph query <file>            get context JSON for a file
-  codegraph serve                   start MCP server (stdio)
-  codegraph install-hook            install git post-commit hook
-  codegraph diff                    index only git-changed files
-  codegraph stats                   show index statistics
+  codegraph init                          initialize graph db in current project
+  codegraph index                         full reindex of the codebase
+  codegraph query <file>                  get context JSON for a file
+  codegraph serve [--root /path/to/proj]  start MCP server (stdio)
+  codegraph install-hook                  install git post-commit hook
+  codegraph diff                          index only git-changed files
+  codegraph stats                         show index statistics
 `)
 }
 
+func findProjectRoot() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, ".codegraph")); err == nil {
+			return dir, nil
+		}
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return dir, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	return os.Getwd()
+}
+
 func getRoot() string {
-	root, err := os.Getwd()
+	root, err := findProjectRoot()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 	return root
+}
+
+func parseRootFlag(args []string) string {
+	for i, arg := range args {
+		if arg == "--root" && i+1 < len(args) {
+			return args[i+1]
+		}
+		if strings.HasPrefix(arg, "--root=") {
+			return strings.TrimPrefix(arg, "--root=")
+		}
+	}
+	return ""
 }
 
 func openDB(root string) *db.DB {
@@ -130,7 +165,23 @@ func cmdQuery() {
 }
 
 func cmdServe() {
-	root := getRoot()
+	root := parseRootFlag(os.Args[2:])
+	if root == "" {
+		root = getRoot()
+	}
+
+	root, err := filepath.Abs(root)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error resolving root: %v\n", err)
+		os.Exit(1)
+	}
+
+	dbPath := filepath.Join(root, ".codegraph", "graph.db")
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "no .codegraph/graph.db found at %s\nrun 'codegraph init && codegraph index' in your project first\n", root)
+		os.Exit(1)
+	}
+
 	srv, err := server.New(root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

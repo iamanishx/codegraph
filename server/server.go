@@ -40,16 +40,16 @@ func (s *Server) Close() error {
 }
 
 type getContextArgs struct {
-	FilePath string `json:"file_path" jsonschema:"description=Relative path to the file from project root"`
+	FilePath string `json:"file_path" jsonschema_description:"Relative path to the file from project root"`
 }
 
 type getSymbolsArgs struct {
-	FilePath string `json:"file_path" jsonschema:"description=Relative path to the file from project root"`
+	FilePath string `json:"file_path" jsonschema_description:"Relative path to the file from project root"`
 }
 
 type findUsagesArgs struct {
-	Symbol   string `json:"symbol" jsonschema:"description=Name of the symbol to find usages for"`
-	FilePath string `json:"file_path,omitempty" jsonschema:"description=Optional: scope search to usages of this symbol from a specific file"`
+	Symbol   string `json:"symbol" jsonschema_description:"Name of the symbol to find usages for"`
+	FilePath string `json:"file_path,omitempty" jsonschema_description:"Optional: scope search to usages of this symbol from a specific file"`
 }
 
 type reindexArgs struct{}
