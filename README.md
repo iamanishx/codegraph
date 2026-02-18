@@ -36,7 +36,7 @@ Or build from source:
 ```sh
 git clone https://github.com/iamanishx/codegraph.git
 cd codegraph
-go build -o codegraph ./cmd/
+go build -o codegraph ./cmd/codegraph/
 ```
 
 ## Quick start
@@ -92,11 +92,19 @@ The server exposes four tools:
 
 codegraph runs as a stdio MCP server. The LLM client launches it as a subprocess and communicates over stdin/stdout using JSON-RPC.
 
+The server automatically discovers the project root by walking up from the current working directory to find `.codegraph/` or `.git/`. Since MCP clients spawn the subprocess with cwd set to the project root, you only need one global config — no per-project setup.
+
 Start the server manually:
 
 ```sh
 cd /path/to/your/project
 codegraph serve
+```
+
+If you need to override the project root:
+
+```sh
+codegraph serve --root /path/to/your/project
 ```
 
 ### OpenCode
@@ -110,20 +118,6 @@ Add to your `opencode.json` (or `opencode.jsonc`):
     "codegraph": {
       "type": "local",
       "command": ["codegraph", "serve"],
-      "enabled": true
-    }
-  }
-}
-```
-
-If the binary is not in your `PATH`, use the absolute path:
-
-```json
-{
-  "mcp": {
-    "codegraph": {
-      "type": "local",
-      "command": ["/path/to/codegraph", "serve"],
       "enabled": true
     }
   }
@@ -156,6 +150,38 @@ Add to `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for glob
 {
   "mcpServers": {
     "codegraph": {
+      "command": "codegraph",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+### VS Code
+
+Add to your MCP config (`Cmd+Shift+P` > `MCP: Open User Configuration`):
+
+```json
+{
+  "servers": {
+    "codegraph": {
+      "type": "stdio",
+      "command": "codegraph",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+### Cline / Roo Code / Kilocode
+
+Add to the MCP settings JSON:
+
+```json
+{
+  "mcpServers": {
+    "codegraph": {
+      "type": "stdio",
       "command": "codegraph",
       "args": ["serve"]
     }
@@ -202,13 +228,13 @@ The LLM can call the `reindex` tool directly if the graph seems stale.
 ## CLI reference
 
 ```
-codegraph init              initialize .codegraph/graph.db in the current project
-codegraph index             full reindex of the codebase
-codegraph query <file>      print the context JSON for a file
-codegraph serve             start the MCP server (stdio)
-codegraph install-hook      install a git post-commit hook
-codegraph diff              index only files changed in the last commit
-codegraph stats             print file/symbol/edge counts
+codegraph init                          initialize .codegraph/graph.db in the current project
+codegraph index                         full reindex of the codebase
+codegraph query <file>                  print the context JSON for a file
+codegraph serve [--root /path/to/proj]  start the MCP server (stdio)
+codegraph install-hook                  install a git post-commit hook
+codegraph diff                          index only files changed in the last commit
+codegraph stats                         print file/symbol/edge counts
 ```
 
 ## Supported languages
@@ -221,20 +247,22 @@ codegraph stats             print file/symbol/edge counts
 
 ## Performance
 
-- Full index of unchanged files: skipped (content hash check)
-- Full walk + hash check on a 7-file project: ~10ms
+- 875 files, 3508 symbols, 5835 edges indexed in ~400ms
+- Full reindex of unchanged files: skipped via content hash (< 1ms)
 - Incremental index (1 changed file): ~50ms
-- Single file query: <1ms
+- Single file query: < 1ms
+- Concurrent parsing with goroutine worker pool
+- All DB writes batched in a single transaction
 
 ## Project structure
 
 ```
 codegraph/
-├── cmd/          CLI entry point
-├── db/           SQLite schema and data access
-├── parser/       per-language import/export extractors
-├── walker/       filesystem walker (.gitignore aware)
-├── indexer/      orchestrates walk → parse → store
-├── query/        builds context JSON from the graph
-└── server/       MCP server (stdio transport)
+├── cmd/codegraph/  CLI entry point
+├── db/             SQLite schema and data access
+├── parser/         per-language import/export extractors
+├── walker/         filesystem walker (.gitignore aware)
+├── indexer/        orchestrates walk → parse → store (concurrent)
+├── query/          builds context JSON from the graph
+└── server/         MCP server (stdio transport)
 ```
